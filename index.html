@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>우리북</title>
+<meta name="description" content="사진을 넣으면 날짜순으로 정리하고 보정해서 가족 앨범을 만들어 주는 포토북 앱">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="우리북">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1B1E25" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Dongle:wght@400;700&family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hahmlet:wght@300;500;700&family=Hi+Melody&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Jua&family=Nanum+Brush+Script&family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Poor+Story&family=Song+Myung&family=Sunflower:wght@500;700&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* Layout: a bindery workbench — tool rail left, the open book on a cloth-covered table right; on phones the book stays pinned on top and the tools sit in a bottom tab bar */
+:root{
+  --desk:#ECEBE6; --sheet:#FFFFFF; --sheet-2:#F6F5F1; --ink:#1C2030; --muted:#5D6375; --line:#D8D6CD; --line-2:#E8E6DF;
+  --cloth:#2C4A80; --cloth-ink:#FFFFFF; --cloth-soft:#E1E7F3; --gilt:#8F6C25; --table:#DCDAD1; --shadow:rgba(28,32,48,.22);
+  --ok:#2C7A55; --warn:#9A600C; --err:#B3261E; --scrim:rgba(20,22,30,.55);
+  --f-display:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Noto Serif KR",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  --r:10px; --stage-h:54vh; --tabbar:62px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --desk:#14161B; --sheet:#1B1E25; --sheet-2:#22252D; --ink:#E8E9EE; --muted:#9CA2B0; --line:#30343E; --line-2:#272A32;
+    --cloth:#94ABE3; --cloth-ink:#0F1320; --cloth-soft:#263150; --gilt:#D3B166; --table:#0F1115; --shadow:rgba(0,0,0,.55);
+    --ok:#5DC292; --warn:#E2A84C; --err:#F2786D; --scrim:rgba(0,0,0,.66); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --desk:#14161B; --sheet:#1B1E25; --sheet-2:#22252D; --ink:#E8E9EE; --muted:#9CA2B0; --line:#30343E; --line-2:#272A32;
+  --cloth:#94ABE3; --cloth-ink:#0F1320; --cloth-soft:#263150; --gilt:#D3B166; --table:#0F1115; --shadow:rgba(0,0,0,.55);
+  --ok:#5DC292; --warn:#E2A84C; --err:#F2786D; --scrim:rgba(0,0,0,.66); color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--desk);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cloth);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column}
+
+.bar{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--sheet);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.mark{width:18px;height:22px;border-radius:2px 4px 4px 2px;background:var(--cloth);box-shadow:inset 4px 0 0 rgba(0,0,0,.22);align-self:center}
+.brand-name{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.02em}
+.brand-sub{color:var(--muted);font-size:12.5px;letter-spacing:.06em}
+.views{display:flex;gap:4px;background:var(--sheet-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.view-btn{border:0;background:none;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--muted);font-weight:500}
+.view-btn[aria-selected="true"]{background:var(--cloth);color:var(--cloth-ink)}
+.count{font-variant-numeric:tabular-nums;opacity:.8}
+.bar-meta{margin-left:auto;color:var(--muted);font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(340px,400px) minmax(0,1fr)}
+.rail{min-height:0;overflow:auto;background:var(--sheet);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.tabs{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:repeat(6,1fr);background:var(--sheet);border-bottom:1px solid var(--line)}
+.tab{border:0;background:none;padding:13px 2px 10px;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab svg{display:none;width:21px;height:21px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--cloth);font-weight:600}
+.panel{padding:18px 18px 32px;display:flex;flex-direction:column;gap:16px}
+.panel h3{margin:0;font-family:var(--f-display);font-size:17px;font-weight:700;text-wrap:balance}
+.panel h4{margin:0;font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.hint{margin:0;color:var(--muted);font-size:13px}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec + .sec{border-top:1px solid var(--line-2);padding-top:16px}
+details.sec > summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--f-display);font-weight:700;font-size:16px;padding:2px 0}
+details.sec > summary::-webkit-details-marker{display:none}
+details.sec > summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .15s}
+details.sec[open] > summary::after{transform:rotate(-135deg) translateY(-1px)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+.field{display:flex;flex-direction:column;gap:5px}
+.field > span{font-size:12.5px;color:var(--muted);font-weight:500}
+.input,select.input,textarea.input{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--sheet-2);border-radius:8px;padding:8px 10px;min-height:40px}
+textarea.input{resize:vertical;min-height:72px;line-height:1.5}
+.input:focus{border-color:var(--cloth);outline:none;box-shadow:0 0 0 3px var(--cloth-soft)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:500;min-height:40px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--cloth);border-color:var(--cloth);color:var(--cloth-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{min-height:32px;padding:4px 10px;font-size:12.5px}
+.btn.ghost{background:none}
+.btn.danger{color:var(--err)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px;flex:none}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--line);background:var(--sheet);border-radius:7px;cursor:pointer;padding:0;color:var(--ink)}
+.iconbtn:hover{border-color:var(--muted)}
+.iconbtn[disabled]{opacity:.35;cursor:not-allowed}
+.iconbtn svg{width:15px;height:15px}
+
+.seg{display:flex;background:var(--sheet-2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{flex:1 1 0;min-width:0;border:0;background:none;border-radius:6px;padding:7px 4px;cursor:pointer;color:var(--muted);font-size:13px;line-height:1.3}
+.seg button small{display:block;font-size:11px;opacity:.8}
+.seg button[aria-pressed="true"]{background:var(--sheet);color:var(--ink);font-weight:600;box-shadow:0 1px 2px var(--shadow)}
+
+.switch{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;flex:none;width:36px;height:22px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;margin:1px 0 0;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch input:checked{background:var(--cloth)}
+.switch input:checked::after{transform:translateX(14px)}
+.switch input:disabled{opacity:.4}
+.switch b{display:block;font-weight:600;font-size:13.5px}
+.switch small{display:block;color:var(--muted);font-size:12.5px;line-height:1.45}
+
+.drop{display:flex;flex-direction:column;gap:4px;align-items:flex-start;border:1.5px dashed var(--line);border-radius:var(--r);padding:16px;cursor:pointer;background:var(--sheet-2);transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--cloth);background:var(--cloth-soft)}
+.drop strong{font-size:15px;display:flex;gap:8px;align-items:center}
+.drop strong svg{width:18px;height:18px}
+.drop span{color:var(--muted);font-size:12.5px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.fact{background:var(--sheet-2);border:1px solid var(--line-2);border-radius:8px;padding:7px 9px;min-width:0}
+.fact b{display:block;font-size:16px;font-variant-numeric:tabular-nums;font-family:var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fact span{display:block;color:var(--muted);font-size:11px;line-height:1.3}
+
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}
+.ph{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--sheet-2);border:0;padding:0;cursor:pointer;max-width:100%;display:block;width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph.out img{opacity:.32;filter:grayscale(.6)}
+.ph.sel{outline:2.5px solid var(--cloth);outline-offset:1px}
+.ph .tog{position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.94);color:#1C2030;border:0;cursor:pointer;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ph .tog svg{width:12px;height:12px}
+.ph.out .tog{background:#1C2030;color:#fff}
+.ph .badge{position:absolute;left:3px;bottom:3px;font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(20,22,30,.74);color:#fff;line-height:1.5}
+.ph .face{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:rgba(20,22,30,.74);color:#fff;display:flex;align-items:center;justify-content:center}
+.ph .face svg{width:12px;height:12px}
+.ph .where{position:absolute;left:0;right:0;bottom:0;font-size:10.5px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.72));padding:8px 4px 2px;text-align:center}
+
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.cat{flex:none;border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.cat[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tcard{display:flex;flex-direction:column;gap:5px;text-align:left;border:1.5px solid var(--line-2);background:var(--sheet);border-radius:var(--r);padding:8px;cursor:pointer;min-width:0}
+.tcard:hover{border-color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--cloth);box-shadow:0 0 0 3px var(--cloth-soft)}
+.tcard canvas{width:100%;height:auto;display:block;border-radius:3px;background:var(--sheet-2);min-height:40px}
+.tcard b{font-size:13.5px}
+.tcard small{color:var(--muted);font-size:11.5px;line-height:1.4}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px}
+.concepts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ccard{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;align-items:center;text-align:left;border:1.5px solid var(--line-2);background:var(--sheet);border-radius:9px;padding:8px;cursor:pointer;min-width:0}
+.ccard[aria-pressed="true"]{border-color:var(--cloth);box-shadow:0 0 0 3px var(--cloth-soft)}
+.ccard .sw{width:30px;height:38px;border-radius:2px 4px 4px 2px;box-shadow:inset 3px 0 0 rgba(0,0,0,.18),0 1px 2px var(--shadow);position:relative;overflow:hidden}
+.ccard .sw i{position:absolute;left:7px;right:5px;top:9px;height:12px;border-radius:1px}
+.ccard b{display:block;font-size:13px;line-height:1.3}
+.ccard small{display:block;color:var(--muted);font-size:11px;line-height:1.35}
+
+.layouts{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px}
+.lay{border:1.5px solid var(--line);background:var(--sheet);border-radius:7px;padding:6px;cursor:pointer;aspect-ratio:1;display:flex;max-width:100%;color:var(--ink)}
+.lay svg{width:100%;height:100%}
+.lay[aria-pressed="true"]{border-color:var(--cloth);background:var(--cloth-soft)}
+.slots{display:flex;flex-direction:column;gap:6px}
+.slot{display:grid;grid-template-columns:46px minmax(0,1fr);gap:4px 9px;align-items:center;padding:6px;border:1px solid var(--line-2);border-radius:8px;background:var(--sheet-2)}
+.slot img{width:46px;height:46px;object-fit:cover;border-radius:5px;display:block;grid-row:span 2}
+.slot .meta{font-size:12px;color:var(--muted);line-height:1.35;min-width:0;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.slot .meta b{color:var(--ink);font-weight:500}
+.slot .acts{display:flex;gap:4px;flex-wrap:wrap}
+.dpi{font-size:11px;padding:0 5px;border-radius:4px;border:1px solid currentColor}
+.dpi.low{color:var(--err)} .dpi.mid{color:var(--warn)} .dpi.ok{color:var(--ok)}
+.choose{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+
+.adj-view{position:relative;background:var(--sheet-2);border-radius:var(--r);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:160px}
+.adj-view canvas{max-width:100%;max-height:280px;display:block}
+.adj-view .hold{position:absolute;right:8px;bottom:8px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.chip{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;border:1.5px solid transparent;background:none;border-radius:8px;padding:3px;cursor:pointer;font-size:11.5px;color:var(--muted)}
+.chip canvas{width:54px;height:54px;border-radius:5px;display:block;object-fit:cover}
+.chip[aria-pressed="true"]{border-color:var(--cloth);color:var(--ink)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer;color:var(--muted)}
+.pill[aria-pressed="true"]{background:var(--cloth);border-color:var(--cloth);color:var(--cloth-ink);font-weight:600}
+.slider{display:grid;grid-template-columns:82px minmax(0,1fr) 38px;gap:8px;align-items:center;font-size:13px}
+.slider input{width:100%;accent-color:var(--cloth);height:28px;margin:0}
+.slider output{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
+.note{font-size:12.5px;color:var(--muted);background:var(--sheet-2);border-radius:8px;padding:8px 10px;margin:0}
+.spec{background:var(--sheet-2);border:1px solid var(--line-2);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.spec b{color:var(--ink);font-weight:600}
+.tips{margin:0;padding-left:18px;color:var(--muted);font-size:12.5px;display:flex;flex-direction:column;gap:4px}
+.status{font-size:12.5px;color:var(--muted);margin:0}
+.status.ok{color:var(--ok)} .status.err{color:var(--err)}
+
+.stage{min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--table);background-image:radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.18), transparent 70%)}
+.notice{margin:12px 16px 0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--gilt);border-radius:8px;padding:8px 12px;font-size:13px}
+.notice p{margin:0;min-width:0;flex:1 1 200px}
+.notice .row{gap:6px}
+.spread-wrap{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:18px 54px}
+#spread{display:block;filter:drop-shadow(0 12px 22px var(--shadow));touch-action:none;max-width:100%;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--sheet);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);z-index:1}
+.nav svg{width:18px;height:18px}
+.nav.prev{left:10px} .nav.next{right:10px}
+.nav[disabled]{opacity:.3;cursor:default}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--f-display);font-size:16px}
+.stage-bar{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;padding:0 16px 4px;font-size:13px;color:var(--muted)}
+.stage-bar b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.stage-bar .row{gap:6px}
+.save{font-size:12px;color:var(--muted);white-space:nowrap}
+.mini-switch{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;white-space:nowrap}
+.mini-switch input{accent-color:var(--cloth)}
+.only-phone{display:none!important}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:8px 16px 14px;scrollbar-width:thin}
+.thumb{flex:none;border:0;background:none;padding:5px 5px 3px;border-radius:7px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.thumb:hover{background:rgba(127,127,127,.12)}
+.thumb.on{background:var(--sheet);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+.thumb canvas{height:54px;display:block;box-shadow:0 1px 3px var(--shadow);background:#fff}
+
+.shelf{flex:1;min-height:0;overflow:auto;padding-block:26px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.shelf-in{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.shelf h2{margin:0;font-family:var(--f-display);font-size:26px;text-wrap:balance}
+.shelf .lead{margin:0;color:var(--muted);max-width:62ch}
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:26px 20px;padding:22px 16px 18px;background:linear-gradient(transparent calc(100% - 14px), var(--line) calc(100% - 14px));border-radius:6px}
+.book{border:0;background:none;padding:0;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px;min-width:0}
+.book .cv{position:relative;width:100%;box-shadow:0 10px 18px var(--shadow);border-radius:2px 5px 5px 2px;overflow:hidden;background:var(--sheet-2)}
+.book .cv::before{content:"";position:absolute;inset:0 auto 0 0;width:7%;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.12) 60%,transparent);z-index:1}
+.book img{display:block;width:100%;height:100%;object-fit:cover}
+.book b{font-size:14px;line-height:1.35}
+.book small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.empty{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px;color:var(--muted);text-align:center;background:var(--sheet)}
+
+.overlay{position:fixed;inset:0;z-index:60;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{background:var(--sheet);border-radius:14px;padding:22px;width:min(420px,100%);box-sizing:border-box;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.card.wide{width:min(560px,100%);max-height:min(80vh,720px);padding:18px}
+.card.wide .scroll{overflow:auto;min-height:0;flex:1}
+.card h3{margin:0;font-family:var(--f-display);font-size:18px}
+.card p{margin:0;color:var(--muted)}
+.bar-track{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar-fill{height:100%;width:0;background:var(--cloth);transition:width .2s}
+.card .acts{display:flex;justify-content:flex-end;gap:8px}
+.viewer{position:fixed;inset:0;z-index:55;background:var(--desk);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.viewer-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--sheet)}
+.viewer-top h3{margin:0;font-family:var(--f-display);font-size:18px;flex:1 1 180px;min-width:0}
+.viewer-stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:18px 58px;background:var(--table);touch-action:pan-y}
+.viewer-pages{display:flex;max-width:100%;max-height:100%;filter:drop-shadow(0 12px 22px var(--shadow))}
+.viewer-pages img{display:block;max-height:calc(100vh - 170px);max-width:min(44vw,640px);object-fit:contain;background:#fff}
+.viewer-pages.single img{max-width:min(86vw,720px)}
+.viewer-foot{text-align:center;padding:8px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(520px,calc(100% - 32px));pointer-events:none}
+.toast{pointer-events:auto;background:var(--ink);color:var(--sheet);border-radius:10px;padding:10px 14px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center}
+.toast.err{background:var(--err);color:#fff}
+.toast button{border:0;background:rgba(127,127,127,.28);color:inherit;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600;white-space:nowrap}
+
+@media (max-width: 880px){
+  .app{height:auto;min-height:100%}
+  .bar{padding-block:8px}
+  .brand-sub,.bar-meta{display:none}
+  .work{display:flex;flex-direction:column}
+  .stage{order:-1;position:sticky;top:env(safe-area-inset-top,0px);z-index:4;height:var(--stage-h);min-height:300px;box-shadow:0 6px 14px -10px var(--shadow);border-bottom:1px solid var(--line)}
+  .app.stage-small .stage{--stage-h:36vh;min-height:230px}
+  .notice{margin:8px 12px 0;padding:6px 10px;font-size:12px;line-height:1.4;gap:8px;flex-wrap:nowrap}
+  .notice p{flex:1 1 auto}
+  .notice .btn{min-height:32px;padding:4px 10px;font-size:12.5px;white-space:nowrap}
+  .notice .row{flex-wrap:nowrap}
+  .spread-wrap{padding:8px 40px}
+  .nav{width:34px;height:34px}
+  .nav.prev{left:3px} .nav.next{right:3px}
+  .stage-bar{padding:0 12px 2px;font-size:12px}
+  .strip{padding:4px 12px 8px;gap:6px}
+  .thumb canvas{height:38px}
+  .thumb{font-size:10.5px;padding:3px 3px 2px}
+  .only-phone{display:inline-flex!important}
+  .rail{border-right:0;overflow:visible;padding-bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px))}
+  .tabs{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:20;border-bottom:0;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);box-shadow:0 -4px 14px -8px var(--shadow)}
+  .tab{padding:8px 2px 7px;font-size:11px;border-bottom:0;border-top:2px solid transparent}
+  .tab[aria-selected="true"]{border-top-color:var(--cloth);color:var(--cloth)}
+  .tab svg{display:block}
+  .panel{padding:16px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+  .input,select.input,textarea.input{font-size:16px}
+  .btn{min-height:42px} .btn.sm{min-height:36px;font-size:13px}
+  .iconbtn{width:38px;height:38px}
+  .slider{grid-template-columns:76px minmax(0,1fr) 34px}
+  .slider input{height:34px}
+  .facts{grid-template-columns:repeat(2,1fr)}
+  .overlay.sheet{align-items:flex-end;padding:0}
+  .overlay.sheet .card{width:100%;border-radius:16px 16px 0 0;max-height:82vh;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .toasts{bottom:calc(var(--tabbar) + 12px + env(safe-area-inset-bottom,0px))}
+  .shelf{overflow:visible}
+  .viewer-stage{padding:12px 44px}
+  .viewer-pages img{max-height:calc(100vh - 180px)}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+
+/* app shell */
+.notices{display:flex;flex-direction:column;gap:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.notices .notice{margin:10px 0 0}
+.notices .notice ~ .notice{margin-top:0}
+@media (max-width: 880px){ .notices .notice{margin:8px 0 0} .stage{--stage-h:50vh;min-height:280px} .app.stage-small .stage{--stage-h:34vh;min-height:220px} }
+#installNotice{border-left-color:var(--cloth)}
+#ready .card h3{word-break:break-all}
+#readyBody{font-variant-numeric:tabular-nums}
+@media (display-mode: standalone){ .bar{padding-block:8px} }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="bar">
+    <div class="brand"><span class="mark" aria-hidden="true"></span><span class="brand-name">우리북</span><span class="brand-sub">가족 앨범 공방</span></div>
+    <nav class="views" role="tablist" aria-label="화면">
+      <button class="view-btn" id="vMake" role="tab" aria-selected="true">책 만들기</button>
+      <button class="view-btn" id="vShelf" role="tab" aria-selected="false">내 책장 <span class="count" id="shelfCount"></span></button>
+    </nav>
+    <div class="bar-meta" id="barMeta"></div>
+  </header>
+
+  <div class="notices" id="notices">
+      <div class="notice" id="installNotice" hidden>
+        <p>홈 화면에 추가하면 앱처럼 쓸 수 있어요. 아래 <b>공유</b> 버튼을 누르고 <b>홈 화면에 추가</b>를 고르세요.</p>
+        <button class="btn sm ghost" id="installClose" type="button">닫기</button>
+      </div>
+      <div class="notice" id="resumeNotice" hidden>
+        <p id="resumeText"></p>
+        <div class="row"><button class="btn sm primary" id="btnResume" type="button">이어서 만들기</button><button class="btn sm ghost" id="btnFresh" type="button">새로 시작</button></div>
+      </div>
+      <div class="notice" id="sampleNotice" hidden>
+        <p>예시 사진으로 만든 책이에요. 내 사진을 넣으면 바로 바뀌어요.</p>
+        <label class="btn sm primary" for="fileIn">내 사진 넣기</label>
+      </div>
+  </div>
+  <section class="work" id="viewMake">
+    <aside class="rail" id="rail">
+      <div class="tabs" role="tablist" aria-label="만들기 단계" id="tabs">
+        <button class="tab" role="tab" data-tab="photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>사진</button>
+        <button class="tab" role="tab" data-tab="book"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>책</button>
+        <button class="tab" role="tab" data-tab="theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.7 0-1 .8-1.6 1.8-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>테마</button>
+        <button class="tab" role="tab" data-tab="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18"/></svg>페이지</button>
+        <button class="tab" role="tab" data-tab="adjust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>보정</button>
+        <button class="tab" role="tab" data-tab="export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>완성</button>
+      </div>
+
+      <div class="panel" id="panel-photos">
+        <label class="drop" id="drop" for="fileIn">
+          <strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>사진 넣기</strong>
+          <span>눌러서 앨범에서 고르거나 끌어다 놓으세요. JPG·PNG·WEBP, 한 번에 600장까지. 찍은 날짜를 읽어 자동으로 정리해요.</span>
+        </label>
+        <div class="facts" id="photoFacts"></div>
+        <div class="sec">
+          <label class="switch"><input type="checkbox" id="optAuto" checked><span><b>자동 보정</b><small>노출, 화이트밸런스, 대비를 사진마다 맞춰요.</small></span></label>
+          <label class="switch"><input type="checkbox" id="optFace" checked><span><b>인물 자동 보정</b><small>얼굴이 있는 사진은 얼굴 주변 피부 결만 자연스럽게 다듬고, 페이지에 놓을 때 얼굴이 잘리지 않게 맞춰요.</small></span></label>
+          <label class="switch"><input type="checkbox" id="optDedupe" checked><span><b>비슷한 사진 정리</b><small>2분 안에 연달아 찍은 비슷한 사진 중 가장 선명한 한 장만 책에 넣어요.</small></span></label>
+        </div>
+        <div class="sec">
+          <div class="spread-row"><h4>사진 목록</h4><button class="btn sm ghost" id="btnRebuild" type="button">자동 구성 다시 하기</button></div>
+          <p class="hint">사진을 누르면 보정으로 가요. 오른쪽 위 표시로 책에서 빼거나 다시 넣을 수 있어요. 얼굴 표시는 인물 사진이에요.</p>
+          <div class="pgrid" id="photoGrid"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-book" hidden>
+        <details class="sec" open>
+          <summary>컨셉 고르기</summary>
+          <p class="hint">테마, 구성, 한 페이지 사진 수, 표지가 한 번에 맞춰져요. 고른 뒤에 하나씩 바꿀 수 있어요.</p>
+          <div class="concepts" id="conceptGrid"></div>
+        </details>
+        <details class="sec" open>
+          <summary>책 정보</summary>
+          <label class="field"><span>제목</span><input class="input" id="bTitle" maxlength="40"></label>
+          <label class="field"><span>부제</span><input class="input" id="bSub" maxlength="60"></label>
+          <label class="field"><span>가족 이름 (표지와 낙관에 들어가요)</span><input class="input" id="bFamily" maxlength="16"></label>
+          <label class="field"><span>첫 장에 들어갈 글</span><textarea class="input" id="bIntro" maxlength="300"></textarea></label>
+          <label class="field"><span>아이 생일 (넣으면 페이지에 ‘생후 N개월’이 표시돼요)</span><input class="input" type="date" id="bBirth"></label>
+        </details>
+        <details class="sec" open>
+          <summary>구성</summary>
+          <div class="field"><span>한 권의 단위</span>
+            <div class="seg" id="bMode"><button type="button" data-v="year">연간<small>달마다 챕터</small></button><button type="button" data-v="month">월간<small>날짜별 페이지</small></button></div>
+          </div>
+          <div class="field"><span>한 페이지에 넣을 사진</span>
+            <div class="seg" id="bDensity"><button type="button" data-v="airy">넉넉하게<small>1~2장</small></button><button type="button" data-v="normal">보통<small>2~4장</small></button><button type="button" data-v="full">꽉 차게<small>4~6장</small></button><button type="button" data-v="collage">콜라주<small>6~12장</small></button></div>
+          </div>
+          <div class="field"><span>표지</span>
+            <div class="seg" id="bCover"><button type="button" data-v="theme">테마 기본</button><button type="button" data-v="bleed">사진 꽉 채우기</button><button type="button" data-v="collage">콜라주</button></div>
+          </div>
+          <label class="field"><span>책 크기</span><select class="input" id="bSize"></select></label>
+          <label class="switch"><input type="checkbox" id="bDates" checked><span><b>날짜 표시</b><small>페이지 위에 찍은 날짜를 적어요.</small></span></label>
+          <label class="switch"><input type="checkbox" id="bPageNo" checked><span><b>쪽 번호</b></span></label>
+          <p class="hint">단위나 사진 수를 바꾸면 페이지를 새로 짜요. 사진 보정값은 그대로 남아요.</p>
+        </details>
+      </div>
+
+      <div class="panel" id="panel-theme" hidden>
+        <div class="sec">
+          <h3>테마 24가지</h3>
+          <p class="hint">종이, 글꼴, 사진 프레임, 날짜 표시가 한 번에 바뀌어요. 지금 책의 표지와 사진 페이지로 미리 보여드려요.</p>
+          <div class="cats" id="themeCats"></div>
+          <div class="themes" id="themeGrid"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-page" hidden><div id="pageInspector" class="sec"></div></div>
+      <div class="panel" id="panel-adjust" hidden><div id="adjustPanel" class="sec"></div></div>
+
+      <div class="panel" id="panel-export" hidden>
+        <div class="sec">
+          <h3>인쇄용 파일 만들기</h3>
+          <div class="field"><span>화질</span>
+            <div class="seg" id="eDpi"><button type="button" data-v="300">인쇄용<small>300dpi</small></button><button type="button" data-v="200">고화질<small>200dpi</small></button><button type="button" data-v="150">가볍게<small>150dpi</small></button></div>
+          </div>
+          <label class="switch"><input type="checkbox" id="eBleed" checked><span><b>재단 여백 3mm 포함</b><small>인쇄소에 맡길 때 켜 두세요. 배경과 꽉 찬 사진이 사방 3mm 더 그려지고 PDF에 재단선(TrimBox)이 기록돼요.</small></span></label>
+          <label class="field"><span>파일 이름</span><input class="input" id="eName" maxlength="60"></label>
+          <div class="spec" id="eSpec"></div>
+          <div class="row">
+            <button class="btn primary" id="btnPdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>PDF 만들기</button>
+            <button class="btn" id="btnZip" type="button">페이지별 JPG (ZIP)</button>
+          </div>
+          <p class="status" id="eStatus"></p>
+        </div>
+        <div class="sec">
+          <h4>인쇄소에 맡길 때</h4>
+          <ul class="tips">
+            <li>이미지는 300dpi 이상이 기준이에요. ‘페이지’ 탭에서 사진마다 인쇄 해상도를 확인할 수 있어요.</li>
+            <li>작업 크기는 완성 크기에 사방 3mm를 더한 크기예요. 예) 210×297mm → 216×303mm</li>
+            <li>얼굴이나 글자는 재단선 안쪽 3~5mm 안에 두세요. 미리보기 아래 ‘재단선’으로 확인할 수 있어요.</li>
+            <li>포토북은 보통 2쪽 단위로 늘어나고 20~22쪽부터 시작해요. 쪽수가 홀수면 메모 페이지를 자동으로 채워요.</li>
+            <li>휴대폰에서 300dpi 저장이 멈추면 ‘고화질 200dpi’로 다시 해 보세요.</li>
+          </ul>
+        </div>
+        <div class="sec">
+          <h3>보관하고 가족과 나누기</h3>
+          <p class="hint">‘내 책장에 보관’하면 이 휴대폰에서 언제든 다시 넘겨볼 수 있어요. 가족에게는 PDF를 만든 뒤 공유 창에서 카카오톡이나 AirDrop으로 보내세요.</p>
+          <button class="btn" id="btnShelf" type="button">내 책장에 보관</button>
+          <p class="status" id="sStatus"></p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="stage" aria-label="책 미리보기">
+      <div class="spread-wrap" id="spreadWrap">
+        <button class="nav prev" id="prevSp" type="button" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <canvas id="spread" aria-label="책 미리보기. 사진을 눌러 고른 뒤 끌면 위치를, 두 손가락으로 크기를 바꿀 수 있어요. 빈 곳을 옆으로 밀면 넘어가요."></canvas>
+        <button class="nav next" id="nextSp" type="button" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <div class="loading" id="stageLoading">예시 앨범을 펼치는 중이에요</div>
+      </div>
+      <div class="stage-bar">
+        <span id="spreadInfo"></span>
+        <div class="row">
+          <button class="iconbtn" id="btnUndo" type="button" title="되돌리기" aria-label="되돌리기" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+          <button class="iconbtn" id="btnRedo" type="button" title="다시 하기" aria-label="다시 하기" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+          <span class="save" id="saveState"></span>
+          <label class="mini-switch"><input type="checkbox" id="guides">재단선</label>
+          <button class="btn sm ghost only-phone" id="btnStageSize" type="button">미리보기 작게</button>
+        </div>
+      </div>
+      <div class="strip" id="strip" aria-label="페이지 목록"></div>
+    </main>
+  </section>
+
+  <section class="shelf" id="viewShelf" hidden>
+    <div class="shelf-in">
+      <h2>내 책장</h2>
+      <p class="lead">이 휴대폰에 보관한 앨범이에요. 책을 누르면 한 장씩 넘겨볼 수 있고, PDF로 만들어 카카오톡이나 AirDrop으로 가족에게 보낼 수 있어요.</p>
+      <div id="shelfBody"></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="busy" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="busyTitle">
+    <h3 id="busyTitle">작업 중</h3>
+    <div class="bar-track"><div class="bar-fill" id="busyFill"></div></div>
+    <p id="busyText"></p>
+    <div class="acts"><button class="btn" id="busyCancel" type="button">취소</button></div>
+  </div>
+</div>
+<div class="overlay sheet" id="dialog" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgBody"></p>
+    <div class="acts"><button class="btn" id="dlgNo" type="button">취소</button><button class="btn primary" id="dlgYes" type="button">확인</button></div>
+  </div>
+</div>
+<div class="overlay sheet" id="picker" hidden>
+  <div class="card wide" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+    <div class="spread-row"><h3 id="pickTitle">사진 고르기</h3><button class="btn sm ghost" id="pickClose" type="button">닫기</button></div>
+    <p class="hint" id="pickHint"></p>
+    <div class="scroll"><div class="choose" id="pickGrid"></div></div>
+  </div>
+</div>
+<div class="viewer" id="viewer" hidden>
+  <div class="viewer-top">
+    <h3 id="vTitle"></h3>
+    <button class="btn sm" id="vPdf" type="button">PDF로 공유</button>
+    <button class="btn sm danger" id="vDel" type="button">지우기</button>
+    <button class="btn sm" id="vClose" type="button">닫기</button>
+  </div>
+  <div class="viewer-stage" id="vStage">
+    <button class="nav prev" id="vPrev" type="button" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="viewer-pages" id="vPages"></div>
+    <button class="nav next" id="vNext" type="button" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="viewer-foot" id="vFoot"></div>
+</div>
+<div class="overlay sheet" id="ready" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="readyTitle">
+    <h3 id="readyTitle"></h3>
+    <p id="readyBody"></p>
+    <p class="hint" id="readyHint"></p>
+    <div class="acts"><button class="btn" id="readyClose" type="button">닫기</button><button class="btn primary" id="readyShare" type="button">공유</button></div>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<input type="file" id="fileIn" accept="image/*" multiple hidden>
+<script src="app.js"></script>
+</body>
+</html>
