@@ -4,7 +4,7 @@
 
 ## 아이폰에 설치하기
 
-1. 아이폰 **Safari**로 앱 주소를 엽니다: `https://avory0127.github.io/uribook/`
+1. 아이폰 **Safari**로 앱 주소를 엽니다: `https://avory0127.github.io/uribook-Public/`
 2. 아래쪽 **공유** 버튼을 누릅니다 (네모에서 화살표가 위로 나온 아이콘).
 3. **홈 화면에 추가**를 고른 뒤 **추가**를 누릅니다.
 
